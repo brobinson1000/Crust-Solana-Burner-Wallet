@@ -1,0 +1,9 @@
+[package]
+name = "crustwallet"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+eframe = "0.28"
+egui_extras = { version = "0.28", features = ["gif", "image"] }
+image = { version = "0.25", features = ["gif"] }

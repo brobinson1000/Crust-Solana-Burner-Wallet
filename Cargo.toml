@@ -7,3 +7,4 @@ edition = "2024"
 eframe = "0.28"
 egui_extras = { version = "0.28", features = ["gif", "image"] }
 image = { version = "0.25", features = ["gif"] }
+solana-sdk = "2.2"

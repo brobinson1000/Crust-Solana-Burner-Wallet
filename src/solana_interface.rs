@@ -13,42 +13,42 @@ use anyhow::{anyhow, Context, Result};
 
 pub struct SolanaInterface {
     pub keypair: Option<Keypair>,
-    pub public_key: String,
-    pub secret_key: String,
-    pub secret_bytes: [u8; 64],
-    pub solana_rpc: String,
+    pub client: RpcClient,
 }
 
 impl Default for SolanaInterface {
     fn default() -> Self {
         Self {
             keypair: None,
-            public_key: String::new(),
-            secret_key: String::new(),
-            secret_bytes: [0; 64],
-            solana_rpc: String::from("https://api.devnet.solana.com"),
+            client: RpcClient::new("https://api.devnet.solana.com"),
         }
     }
 }
 
 impl SolanaInterface {
-    pub fn generate_keypairs(&mut self) {
-        let new_kp = Keypair::new();
 
-        self.public_key = new_kp.pubkey().to_string();
-
-        self.secret_key = new_kp.to_base58_string();
-
-        self.secret_bytes = new_kp.to_bytes();
-
-        self.keypair = Some(new_kp); 
+    pub fn new(rpc_url: &str) -> Self {
+        Self {
+            keypair: None,
+            client: RpcClient::new(rpc_url),
+        }
 
     }
 
-    pub fn send_sol(&mut self, recipient_pubkey: &str, amount_in_sol: f64) -> Result<()> {
-       
-        let client = RpcClient::new(&self.solana_rpc);
+    pub fn generate_keypairs(&mut self) {
+        self.keypair = Some(Keypair::new());
+    }
 
+    pub fn public_key(&self) -> Option<Pubkey> {
+        self.keypair.as_ref().map(|kp| kp.pubkey())
+    }
+
+    pub fn secret_key_base58(&self) -> Option<String> {
+        self.keypair.as_ref().map(|kp| kp.to_base58_string())
+    }
+
+    pub fn send_sol(&self, recipient_pubkey: &str, amount_in_sol: f64) -> Result<()> {
+       
         let sender_kp = self.keypair.as_ref()
             .ok_or_else(|| anyhow!("No keypair generated or loaded"))?;
 
@@ -58,7 +58,7 @@ impl SolanaInterface {
             .with_context(|| format!("Invalid recipient public key {}", recipient_pubkey))?;
 
 
-        let lamports = (amount_in_sol * LAMPORTS_PER_SOL as f64) as u64;
+        let lamports = (amount_in_sol * LAMPORTS_PER_SOL as f64).round() as u64;
 
         let transfer_instruction = system_instruction::transfer(
             &sender_pubkey,
@@ -66,7 +66,7 @@ impl SolanaInterface {
             lamports,
         );
 
-        let recent_blockhash = client.get_latest_blockhash()
+        let recent_blockhash = self.client.get_latest_blockhash()
             .context("Failed to get latest blockhash")?;
 
 
@@ -79,7 +79,7 @@ impl SolanaInterface {
         );
 
         println!("Sending {} sol to {}", amount_in_sol, recipient_pubkey);
-        let _signature = client.send_and_confirm_transaction(&transaction)
+        let _signature = self.client.send_and_confirm_transaction(&transaction)
             .context("Transaction execution or confirmation failed")?;
 
         Ok(())

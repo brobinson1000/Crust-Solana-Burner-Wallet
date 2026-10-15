@@ -9,3 +9,4 @@ egui_extras = { version = "0.28", features = ["gif", "image"] }
 image = { version = "0.25", features = ["gif"] }
 solana-client = "2.2.0"
 solana-sdk = "2.2.0"
+anyhow = { version = "1.0", default-features = false }

@@ -1,12 +1,13 @@
 use eframe::egui;
 use egui::Color32;
 
-mod wallet_interface;
 mod solana_interface;
+mod wallet_interface;
+
 
 struct UserProperties {
-   username: String,
-   password: String,
+    username: String,
+    password: String,
 }
 
 impl Default for UserProperties {
@@ -18,16 +19,16 @@ impl Default for UserProperties {
     }
 }
 
-
-
 struct MyApp {
     userp: UserProperties,
     show_wallet: bool,
+    wallet_window: wallet_interface::wallet_interface_,
 }
 
 impl Default for MyApp {
     fn default() -> Self {
         Self {
+            wallet_window: wallet_interface::wallet_interface_::default(),
             userp: UserProperties::default(),
             show_wallet: false,
         }
@@ -69,11 +70,10 @@ impl eframe::App for MyApp {
                         ui.add(password_input);
                     });
 
-
-                    let orange = Color32::from_rgb(255, 79, 23);        // same as the crab's eyes
-                    let orange_hover = Color32::from_rgb(255, 112, 64);  // lighter on hover
-                    let orange_press = Color32::from_rgb(200, 60, 15);   // darker while pressed
-                    let dark = Color32::from_rgb(8, 7, 6);               // the GIF's background color
+                    let orange = Color32::from_rgb(255, 79, 23); // same as the crab's eyes
+                    let orange_hover = Color32::from_rgb(255, 112, 64); // lighter on hover
+                    let orange_press = Color32::from_rgb(200, 60, 15); // darker while pressed
+                    let dark = Color32::from_rgb(8, 7, 6); // the GIF's background color
 
                     let w = &mut ui.visuals_mut().widgets;
                     w.inactive.weak_bg_fill = orange;
@@ -86,10 +86,11 @@ impl eframe::App for MyApp {
                     if ui.button("Login").clicked() {
                         self.show_wallet = true;
                     }
-
                 });
             });
-            wallet_interface::show(ctx, &self.userp.username, &mut self.show_wallet);
+            if self.show_wallet {
+                self.wallet_window.show(ctx, &self.userp.username, &mut self.show_wallet);
+            }
     }
 }
 

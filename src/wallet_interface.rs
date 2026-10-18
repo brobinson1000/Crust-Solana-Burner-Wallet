@@ -15,6 +15,7 @@ pub struct wallet_interface_ {
     pub public_key: String,
     pub has_kp: bool,
     pub total_sol: f64,
+    pub total_lamports: u64,
     pub destination_addr: String,
     pub amount_input_str: String,
 }
@@ -70,6 +71,21 @@ impl wallet_interface_ {
                             self.solana_api = Arc::new(api);
                         }
 
+                        if self.has_kp {
+
+                            let mut pubkey = self.public_key;
+                            let api = Arc::clone(&self.solana_api);
+
+                            thread::spawn(move || match api.client.get_balance(&pubkey) {
+                                Ok(_) => {
+                                    println!("Successfully fetched balance")
+                                }
+                                Err(e) => {
+                                    println!("Error has occured {e}");
+                                }
+                            });
+                        }
+
                         let send_sol_btn = egui::Button::new("Send Solana")
                             .min_size(egui::vec2(120.0, 40.0))
                             .rounding(4.0);
@@ -86,14 +102,9 @@ impl wallet_interface_ {
                         }
                     });
 
-                    if self.has_kp {
-                        ui.add_space(20.0);
-                        ui.separator();
-                        ui.horizontal(|ui| {
-                            ui.label("Public Key");
-                            ui.monospace(&self.public_key);
-                        });
-                    }
+
+
+
                 });
 
                 if ctx.input(|i| i.viewport().close_requested()) {
